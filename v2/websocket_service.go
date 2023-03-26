@@ -677,6 +677,21 @@ func WsMarketStatServe(symbol string, handler WsMarketStatHandler, errHandler Er
 	return wsServe(cfg, wsHandler, errHandler)
 }
 
+func WsMarketStatServeWithWindowSize(symbol string, windowSize string, handler WsMarketStatHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
+	endpoint := fmt.Sprintf("%s/%s@ticker_%s", getWsEndpoint(), strings.ToLower(symbol), windowSize)
+	cfg := newWsConfig(endpoint)
+	wsHandler := func(message []byte) {
+		var event WsMarketStatEvent
+		err := json.Unmarshal(message, &event)
+		if err != nil {
+			errHandler(err)
+			return
+		}
+		handler(&event)
+	}
+	return wsServe(cfg, wsHandler, errHandler)
+}
+
 // WsAllMarketsStatHandler handle websocket that push all markets statistics for 24hr
 type WsAllMarketsStatHandler func(event WsAllMarketsStatEvent)
 
